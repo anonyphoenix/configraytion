@@ -11,6 +11,7 @@ ping3 = "*"
 pymongo = "*"
 qrcode = "*"
 fastapi = "*"
+pillow = "*"
 
 [dev-packages]
 
