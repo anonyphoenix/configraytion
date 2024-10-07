@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+telethon = "*"
+python-socks = {extras = ["asyncio"], version = "*"}
+requests = "*"
+ping3 = "*"
+pymongo = "*"
+qrcode = "*"
+fastapi = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"

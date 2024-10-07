@@ -1,0 +1,14 @@
+{
+    "WELCOME": "Welcome! Please select a config from our channel to receive it here.",
+    "VERIFY_SUBSCRIPTION": "Verify Subscription",
+    "JOIN_FIRST_AND_THEN_RETRY": "To use this bot, you must be subscribed to the following channel(s). First subscribe, then start the bot again.",
+    "CONFIG_NOT_FOUND": "Config is not found.",
+    "SUBSCRIPTION_VERIFIED": "Subscription verified. You can now select a config from out channel to get it here in the bot.",
+    "FIRST": "First",
+    "LAST": "Last",
+    "PREVIOUS": "Previous",
+    "NEXT": "Next",
+    "FROM": "from",
+    "ADD_TOKEN": "Add token",
+    "VIEW_TOKENS": "View tokens"
+}
