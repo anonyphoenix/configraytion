@@ -28,10 +28,12 @@ logging.info('receiver connected to Telegram.')
 
 @user.on(events.NewMessage(chats=config.CHANNEL_LIST))
 async def receive_config(event):
+    logging.info('new message received from CHANNEL_LIST.')
     xray_config, country, country_emoji = parser.parse_configshub_5415792594(event.raw_text)
+    logging.info('config parsed: ' + xray_config + '.')
     find_config = configs.find_one({'url': xray_config})
     if find_config:
-        logging.debug('duplicate config found config_id=' + str(find_config.get('config_id')) + '.')
+        logging.info('duplicate config found config_id=' + str(find_config.get('config_id')) + '.')
     else:
         config_id = configs.count_documents({}) + 1
         qr_path = f'qrcode/{time.time()}.png'
@@ -45,6 +47,7 @@ async def receive_config(event):
         qr.make()
         img = qr.make_image(fill_color='red', back_color='#23dda0')
         img.save(qr_path)
+        logging.info('qr code saved for config id=' + str(config_id))
         data = {
             'config_id': config_id,
             'url': xray_config,
@@ -55,6 +58,7 @@ async def receive_config(event):
             'text': event.raw_text
         }
         configs.insert_one(data)
+        logging.info('config id=' + str(config_id) + ' saved to DB.')
 
 
 if __name__ == '__main__':
