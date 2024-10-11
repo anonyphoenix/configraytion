@@ -10,8 +10,8 @@ requests = "*"
 ping3 = "*"
 pymongo = "*"
 qrcode = "*"
-fastapi = "*"
 pillow = "*"
+fastapi = {extras = ["standard"], version = "*"}
 
 [dev-packages]
 
