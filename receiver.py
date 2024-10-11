@@ -29,7 +29,7 @@ logging.info('receiver connected to Telegram.')
 @user.on(events.NewMessage(chats=config.CHANNEL_LIST))
 async def receive_config(event):
     logging.debug('new message received from CHANNEL_LIST.')
-    xray_config, country, country_abbreviation = parser.parse_configshub(event.raw_text)
+    xray_config, country, country_abbreviation, country_emoji = parser.parse_configshub(event.raw_text)
     logging.debug('config parsed: ' + xray_config + '.')
     find_config = configs.find_one({'url': xray_config})
     if find_config:
@@ -55,6 +55,7 @@ async def receive_config(event):
             'qrcode': qr_path,
             'country': country,
             'country_abbreviation': country_abbreviation,
+            'country_emoji': country_emoji,
             'text': event.raw_text
         }
         configs.insert_one(data)
