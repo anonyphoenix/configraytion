@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, '..')
 from pymongo import MongoClient
 import config
 import helper
