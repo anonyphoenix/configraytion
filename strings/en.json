@@ -10,5 +10,6 @@
     "NEXT": "Next",
     "FROM": "from",
     "ADD_TOKEN": "Add token",
-    "VIEW_TOKENS": "View tokens"
+    "VIEW_TOKENS": "View tokens",
+    "GET_CONFIG": "Get config"
 }

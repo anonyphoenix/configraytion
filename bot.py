@@ -4,7 +4,7 @@ import config
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.types import PeerUser, PeerChat, PeerChannel
 from os.path import exists
-from pymongo import MongoClient
+from pymongo import MongoClient, DESCENDING
 import helper
 import navlib
 import i18n
@@ -61,15 +61,12 @@ async def start(event):
         text_len = len(text_spl)
         if text_len == 2:
             try:
-                config_id = text_spl[1]
-                print(config_id)
-                config_id = int(config_id)
+                config_id = int(text_spl[1])
                 config_find = configs.find_one({'config_id': config_id})
                 if config_find is None:
                     await event.reply(i18n.get('CONFIG_NOT_FOUND'))
                 else:
-                    qr = config_find[1]
-                    await event.reply(config_find[0], file=qr)
+                    await event.reply(config_find['url'], file=config_find['qrcode'])
             except ValueError:
                 if config_id == "check":
                     await event.reply()
@@ -79,11 +76,19 @@ async def start(event):
                     i18n.get('WELCOME'),
                     buttons=[
                         [Button.inline(i18n.get('ADD_TOKEN'), b'ADD_TOKEN')],
-                        [Button.inline(i18n.get('VIEW_TOKEN'), b'VIEW_TOKENS')]
+                        [Button.inline(i18n.get('VIEW_TOKEN'), b'VIEW_TOKENS')],
+                        [Button.inline(i18n.get('GET_CONFIG'), b'GET_CONFIG')]
                     ]
                 )
             else:
-                await event.reply(i18n.get('WELCOME'))
+                await event.reply(i18n.get('WELCOME'), buttons=[[Button.inline(i18n.get('GET_CONFIG'), b'GET_CONFIG')]])
+
+
+@bot.on(events.CallbackQuery(pattern="GET_CONFIG"))
+async def get_config(event):
+    find_configs = configs.find().sort('config_id', DESCENDING).limit(3)
+    for c in find_configs:
+        await event.respond(c['url'] + '#' + c['country_emoji'] + ' t.me/' + config.CHANNEL_USERNAME + ' ' + c['country'], file=c['qrcode'])
 
 
 @bot.on(events.CallbackQuery(pattern="ADD_TOKEN"))
