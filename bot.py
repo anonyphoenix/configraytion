@@ -76,7 +76,7 @@ async def start(event):
                     i18n.get('WELCOME'),
                     buttons=[
                         [Button.inline(i18n.get('ADD_TOKEN'), b'ADD_TOKEN')],
-                        [Button.inline(i18n.get('VIEW_TOKEN'), b'VIEW_TOKENS')],
+                        [Button.inline(i18n.get('VIEW_TOKENS'), b'VIEW_TOKENS')],
                         [Button.inline(i18n.get('GET_CONFIG'), b'GET_CONFIG')]
                     ]
                 )
