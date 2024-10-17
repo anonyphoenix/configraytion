@@ -13,7 +13,7 @@ PROXY_ADDRESS = ('socks5', '127.0.0.1', 10808)
 PHONE = '+123456789'
 PASSWORD = ''
 
-CHANNEL_USERNAME = '@configraytion'
+CHANNEL_USERNAME = 'configraytion'
 CHANNEL_ID = 'https://t.me/configraytion'
 JOIN_CHANNEL_ID = 'https://t.me/configraytion'
 BOT_LINK = 'https://t.me/configraytion_bot?start={id}'

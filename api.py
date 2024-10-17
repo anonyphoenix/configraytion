@@ -36,8 +36,8 @@ async def get_sub_link(token: str):
             return Response(json.dumps(response), 403)
         else:      
             response_text = ''
-            find_configs = configs.find().sort('config_id', DESCENDING)
+            find_configs = configs.find().sort('config_id', DESCENDING).limit(100)
             for c in find_configs:
-                response_text += c['url'] + '#' + c['country_emoji'] + ' ' + config.CHANNEL_ID + ' ' + c['country'] + '\n'
+                response_text += c['url'] + '#' + c['country_emoji'] + ' t.me/' + config.CHANNEL_USERNAME + ' ' + c['country'] + '\n'
             tokens.update_one(find_token, {'$set': {'credit': int(token_credit) - 1}})
             return Response(response_text, 200)

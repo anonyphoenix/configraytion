@@ -46,7 +46,7 @@ while True:
                        '🎈', '🎊', '🧨', '✨', '🎉', '🎀', '🎁', '❤️‍🔥', '🤍', '💜', '🩵', '💙', '💚', '💛',
                          '🧡', '🩷', '💶', '💳', '🚀', '🔖', '🧪', '🍕', '🪙', '💻', '💵', '💸']
         post_emoji = random.choice(emoji_list)
-        full_text += '\n\n' + post_emoji + f'{config.CHANNEL_USERNAME}' + post_emoji
+        full_text += '\n\n' + post_emoji + f'@{config.CHANNEL_USERNAME}' + post_emoji
         # pic is for future versions
         pic = None
         publisher_client.send_message(config.CHANNEL_ID, full_text, parse_mode='html', file=pic)
