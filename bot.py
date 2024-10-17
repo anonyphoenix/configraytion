@@ -88,7 +88,8 @@ async def start(event):
 async def get_config(event):
     find_configs = configs.find().sort('config_id', DESCENDING).limit(3)
     for c in find_configs:
-        await event.respond(c['url'] + '#' + c['country_emoji'] + ' t.me/' + config.CHANNEL_USERNAME + ' ' + c['country'], file=c['qrcode'])
+        await event.respond('```' + c['url'] + '#' + c['country_emoji'] + ' t.me/' + config.CHANNEL_USERNAME + ' ' + c['country'] + '```',
+                            file=c['qrcode'])
 
 
 @bot.on(events.CallbackQuery(pattern="ADD_TOKEN"))
@@ -134,13 +135,13 @@ async def view_tokens(event):
         return
 
     # Initialize page_number and store it in a dict to be used later
-    tokens = tokens.find({}).limit(10)
-    if not tokens:
+    find_tokens = tokens.find({}).limit(10)
+    if not find_tokens:
         await event.respond("No more tokens to display.")
         return
     
     keys = []
-    for token in tokens:
+    for token in find_tokens:
         keys.append([Button.inline(str(token["token"]), str.encode("find_token:" + str(token["token"])))])
     count = tokens.count_documents({})
     total_pages = count // 10
