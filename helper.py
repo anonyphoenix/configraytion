@@ -1,12 +1,27 @@
 import re
-import subprocess
 import requests
 from ping3 import ping
 from telethon.tl.functions.channels import GetParticipantsRequest
 from telethon.tl.types import ChannelParticipantsSearch, InputChannel
-from config import *
+from telethon import Button
+import config
 import secrets
 import string
+import i18n
+
+
+async def bot_welcome(event, lang):
+    if event.sender_id in config.BOT_ADMINS:
+        await event.respond(
+            i18n.get('WELCOME', lang=lang),
+            buttons=[
+                [Button.inline(i18n.get('ADD_TOKEN', lang=lang), b'ADD_TOKEN')],
+                [Button.inline(i18n.get('VIEW_TOKENS', lang=lang), b'VIEW_TOKENS')],
+                [Button.inline(i18n.get('GET_CONFIG', lang=lang), b'GET_CONFIG')]
+            ]
+        )
+    else:
+        await event.respond(i18n.get('WELCOME'), buttons=[[Button.inline(i18n.get('GET_CONFIG'), b'GET_CONFIG')]])
 
 
 def generate_random_token(length=24):
@@ -15,7 +30,7 @@ def generate_random_token(length=24):
 
 
 async def join_check(user_id, cli):
-    entity = await cli.get_entity(JOIN_CHANNEL_ID)
+    entity = await cli.get_entity(config.JOIN_CHANNEL_ID)
     access_hash = entity.access_hash
     channel_id = entity.id
     participants = await cli(GetParticipantsRequest(

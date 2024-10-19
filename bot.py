@@ -3,7 +3,6 @@ from telethon import TelegramClient, Button, events
 import config
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.types import PeerUser, PeerChat, PeerChannel
-from os.path import exists
 from pymongo import MongoClient, DESCENDING
 import helper
 import navlib
@@ -18,6 +17,7 @@ else:
 db = MongoClient(config.MONGO_URL)
 configs = db[config.MONGO_DB]['configs']
 tokens = db[config.MONGO_DB]['tokens']
+users = db[config.MONGO_DB]['users']
 
 if config.PROXY:
     bot = TelegramClient(config.CONFIGRAYTION_BOT_SESSION, config.API_ID, config.API_HASH, proxy=config.PROXY_ADDRESS)
@@ -32,7 +32,6 @@ logging.info('configraytion bot started.')
 @bot.on(events.NewMessage(incoming=True))
 async def start(event):
     text = event.raw_text
-    user_id = event.sender_id
     if type(event.message.peer_id) == PeerChannel:
         chat_type = 'channel'
     elif type(event.message.peer_id) == PeerChat:
@@ -63,25 +62,47 @@ async def start(event):
             try:
                 config_id = int(text_spl[1])
                 config_find = configs.find_one({'config_id': config_id})
-                if config_find is None:
-                    await event.reply(i18n.get('CONFIG_NOT_FOUND'))
-                else:
+                if config_find:
                     await event.reply(config_find['url'], file=config_find['qrcode'])
+                else:
+                    await event.reply(i18n.get('CONFIG_NOT_FOUND'))
             except ValueError:
                 if config_id == "check":
                     await event.reply()
         if text == "/start":
-            if user_id in config.BOT_ADMINS:
+            user_find = users.find_one({'user_id': event.sender_id})
+            if user_find:
+                await helper.bot_welcome(event, user_find['lang'])
+            else:
                 await event.respond(
-                    i18n.get('WELCOME'),
+                    i18n.get('FIRST_TIME', lang='en') + '\n\n' + i18n.get('FIRST_TIME', lang='fa'),
                     buttons=[
-                        [Button.inline(i18n.get('ADD_TOKEN'), b'ADD_TOKEN')],
-                        [Button.inline(i18n.get('VIEW_TOKENS'), b'VIEW_TOKENS')],
-                        [Button.inline(i18n.get('GET_CONFIG'), b'GET_CONFIG')]
+                        [Button.inline(i18n.get('LANGUAGE', lang='en'), b'LANG_EN')],
+                        [Button.inline(i18n.get('LANGUAGE', lang='fa'), b'LANG_FA')]
                     ]
                 )
-            else:
-                await event.reply(i18n.get('WELCOME'), buttons=[[Button.inline(i18n.get('GET_CONFIG'), b'GET_CONFIG')]])
+
+
+@bot.on(events.CallbackQuery(pattern="LANG_EN"))
+async def lang_en(event):
+    users.update_one({
+        'user_id': event.sender_id
+    }, { '$set': {
+        'user_id': event.sender_id,
+        'lang': 'en'
+    }}, upsert=True)
+    await helper.bot_welcome(event, 'en')
+
+
+@bot.on(events.CallbackQuery(pattern="LANG_FA"))
+async def lang_fa(event):
+    users.update_one({
+        'user_id': event.sender_id
+    }, { '$set': {
+        'user_id': event.sender_id,
+        'lang': 'fa'
+    }}, upsert=True)
+    await helper.bot_welcome(event, 'fa')
 
 
 @bot.on(events.CallbackQuery(pattern="GET_CONFIG"))
@@ -94,14 +115,12 @@ async def get_config(event):
 
 @bot.on(events.CallbackQuery(pattern="ADD_TOKEN"))
 async def add_token(event):
-    user_id = event.sender_id
-
-    if user_id not in config.BOT_ADMINS:
+    if event.sender_id not in config.BOT_ADMINS:
         await event.respond("You are not authorized to add token.")
         return
 
     # Start a conversation
-    async with bot.conversation(user_id) as conv:
+    async with bot.conversation(event.sender_id) as conv:
         # Request token plan
         await conv.send_message("Please enter token\'s credit:")
         response = await conv.get_response()
@@ -114,7 +133,7 @@ async def add_token(event):
         token_value = helper.generate_random_token()
 
         token_data = {
-            "creator_id": user_id,
+            "creator_id": event.sender_id,
             "token": token_value,
             "credit": token_credit,
             'date_created': datetime.datetime.now()
@@ -129,8 +148,7 @@ async def add_token(event):
 
 @bot.on(events.CallbackQuery(pattern="VIEW_TOKENS"))
 async def view_tokens(event):
-    user_id = event.sender_id
-    if user_id not in config.BOT_ADMINS:
+    if event.sender_id not in config.BOT_ADMINS:
         await event.respond("You are not authorized to view tokens.")
         return
 
@@ -155,8 +173,7 @@ async def view_tokens(event):
 
 @bot.on(events.CallbackQuery(pattern="tokens_list:*"))
 async def tokens_list(event):
-    user_id = event.sender_id
-    if user_id not in config.BOT_ADMINS:
+    if event.sender_id not in config.BOT_ADMINS:
         await event.respond("You are not authorized to view tokens.")
         return
     count_tokens = tokens.count_documents({})
@@ -188,8 +205,7 @@ async def tokens_list(event):
 
 @bot.on(events.CallbackQuery(pattern="find_token:*"))
 async def find_token(event):
-    user_id = event.sender_id
-    if user_id in config.BOT_ADMINS:
+    if event.sender_id in config.BOT_ADMINS:
         token = event.data.decode().split(":")[1]
         token = tokens.find_one({"token": token})
         if token is None:

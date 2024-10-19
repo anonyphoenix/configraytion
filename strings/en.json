@@ -1,5 +1,7 @@
 {
-    "WELCOME": "Welcome! Please select a config from our channel to receive it here.",
+    "LANGUAGE": "English",
+    "FIRST_TIME": "Hi! Please choose your language.",
+    "WELCOME": "Welcome! You can either select a config from our channel to receive it here or use the 'get config' button below.",
     "VERIFY_SUBSCRIPTION": "Verify Subscription",
     "JOIN_FIRST_AND_THEN_RETRY": "To use this bot, you must be subscribed to the following channel(s). First subscribe, then start the bot again.",
     "CONFIG_NOT_FOUND": "Config is not found.",
