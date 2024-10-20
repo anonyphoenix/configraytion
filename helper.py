@@ -8,6 +8,17 @@ import config
 import secrets
 import string
 import i18n
+import datetime
+
+
+async def bot_lang(event):
+    await event.respond(
+        i18n.get('FIRST_TIME', lang='en') + '\n\n' + i18n.get('FIRST_TIME', lang='fa'),
+        buttons=[
+            [Button.inline(i18n.get('LANGUAGE', lang='en'), b'LANG_EN')],
+            [Button.inline(i18n.get('LANGUAGE', lang='fa'), b'LANG_FA')]
+        ]
+    )
 
 
 async def bot_welcome(event, lang):
@@ -16,7 +27,7 @@ async def bot_welcome(event, lang):
             i18n.get('WELCOME', lang=lang),
             buttons=[
                 [Button.inline(i18n.get('ADD_TOKEN', lang=lang), b'ADD_TOKEN')],
-                [Button.inline(i18n.get('VIEW_TOKENS', lang=lang), b'VIEW_TOKENS:0')],
+                [Button.inline(i18n.get('VIEW_TOKENS', lang=lang), b'VIEW_TOKENS:1')],
                 [Button.inline(i18n.get('GET_CONFIG', lang=lang), b'GET_CONFIG')]
             ]
         )
@@ -32,8 +43,23 @@ def bot_auth(event, users_db):
     else:
         return {
             'user_id': 0,
-            'lang': 'en'
+            'user_type': get_peer_type_from_event(event),
+            'user_group': 'guest',
+            'lang': 'en',
+            'registration_time': datetime.datetime.max,
+            'last_config_request_time': datetime.datetime.max
         }
+
+
+def get_peer_type_from_event(event):
+    if event.is_channel:
+        return 'channel'
+    elif event.is_group:
+        return 'group'
+    elif event.is_private:
+        return 'user'
+    else:
+        return 'unknown'
 
 
 def generate_random_token(length=24):
