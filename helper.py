@@ -16,12 +16,24 @@ async def bot_welcome(event, lang):
             i18n.get('WELCOME', lang=lang),
             buttons=[
                 [Button.inline(i18n.get('ADD_TOKEN', lang=lang), b'ADD_TOKEN')],
-                [Button.inline(i18n.get('VIEW_TOKENS', lang=lang), b'VIEW_TOKENS')],
+                [Button.inline(i18n.get('VIEW_TOKENS', lang=lang), b'VIEW_TOKENS:0')],
                 [Button.inline(i18n.get('GET_CONFIG', lang=lang), b'GET_CONFIG')]
             ]
         )
     else:
-        await event.respond(i18n.get('WELCOME'), buttons=[[Button.inline(i18n.get('GET_CONFIG'), b'GET_CONFIG')]])
+        await event.respond(i18n.get('WELCOME', lang=lang),
+                            buttons=[[Button.inline(i18n.get('GET_CONFIG', lang=lang), b'GET_CONFIG')]])
+
+
+def bot_auth(event, users_db):
+    user_find = users_db.find_one({'user_id': event.sender_id})
+    if user_find:
+        return user_find
+    else:
+        return {
+            'user_id': 0,
+            'lang': 'en'
+        }
 
 
 def generate_random_token(length=24):

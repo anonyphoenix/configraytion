@@ -56,34 +56,33 @@ async def start(event):
         #     ]
         #     await event.reply(i18n.get('JOIN_FIRST_AND_THEN_RETRY'), buttons=key)
         #     return
-        text_spl = str(text).split(' ')
-        text_len = len(text_spl)
-        if text_len == 2:
-            try:
-                config_id = int(text_spl[1])
-                config_find = configs.find_one({'config_id': config_id})
-                if config_find:
-                    await event.reply(config_find['url'], file=config_find['qrcode'])
-                else:
-                    await event.reply(i18n.get('CONFIG_NOT_FOUND'))
-            except ValueError:
-                if config_id == "check":
-                    await event.reply()
-        if text == "/start":
-            user_find = users.find_one({'user_id': event.sender_id})
-            if user_find:
-                await helper.bot_welcome(event, user_find['lang'])
-            else:
-                await event.respond(
-                    i18n.get('FIRST_TIME', lang='en') + '\n\n' + i18n.get('FIRST_TIME', lang='fa'),
-                    buttons=[
-                        [Button.inline(i18n.get('LANGUAGE', lang='en'), b'LANG_EN')],
-                        [Button.inline(i18n.get('LANGUAGE', lang='fa'), b'LANG_FA')]
-                    ]
-                )
+        user_find = users.find_one({'user_id': event.sender_id})
+        if user_find:
+            text_spl = str(text).split(' ')
+            if len(text_spl) == 2:
+                try:
+                    config_id = int(text_spl[1])
+                    config_find = configs.find_one({'config_id': config_id})
+                    if config_find:
+                        await event.reply(config_find['url'], file=config_find['qrcode'])
+                    else:
+                        await event.reply(i18n.get('CONFIG_NOT_FOUND', lang=user_find['lang']))
+                except ValueError:
+                    if config_id == "check":
+                        await event.reply()
+            if text == "/start":
+                    await helper.bot_welcome(event, user_find['lang'])
+        else:
+            await event.respond(
+                i18n.get('FIRST_TIME', lang='en') + '\n\n' + i18n.get('FIRST_TIME', lang='fa'),
+                buttons=[
+                    [Button.inline(i18n.get('LANGUAGE', lang='en'), b'LANG_EN')],
+                    [Button.inline(i18n.get('LANGUAGE', lang='fa'), b'LANG_FA')]
+                ]
+            )
 
 
-@bot.on(events.CallbackQuery(pattern="LANG_EN"))
+@bot.on(events.CallbackQuery(pattern='LANG_EN'))
 async def lang_en(event):
     users.update_one({
         'user_id': event.sender_id
@@ -94,7 +93,7 @@ async def lang_en(event):
     await helper.bot_welcome(event, 'en')
 
 
-@bot.on(events.CallbackQuery(pattern="LANG_FA"))
+@bot.on(events.CallbackQuery(pattern='LANG_FA'))
 async def lang_fa(event):
     users.update_one({
         'user_id': event.sender_id
@@ -105,7 +104,7 @@ async def lang_fa(event):
     await helper.bot_welcome(event, 'fa')
 
 
-@bot.on(events.CallbackQuery(pattern="GET_CONFIG"))
+@bot.on(events.CallbackQuery(pattern='GET_CONFIG'))
 async def get_config(event):
     find_configs = configs.find().sort('config_id', DESCENDING).limit(3)
     for c in find_configs:
@@ -113,108 +112,85 @@ async def get_config(event):
                             file=c['qrcode'])
 
 
-@bot.on(events.CallbackQuery(pattern="ADD_TOKEN"))
+@bot.on(events.CallbackQuery(pattern='ADD_TOKEN'))
 async def add_token(event):
-    if event.sender_id not in config.BOT_ADMINS:
-        await event.respond("You are not authorized to add token.")
-        return
+    user = helper.bot_auth(event, users)
 
-    # Start a conversation
-    async with bot.conversation(event.sender_id) as conv:
-        # Request token plan
-        await conv.send_message("Please enter token\'s credit:")
-        response = await conv.get_response()
-        try:
-            token_credit = int(response.text)
-        except ValueError:
-            await conv.send_message("Invalid input. Please enter an integer.")
-            return
+    if user['user_id'] in config.BOT_ADMINS:
+        async with bot.conversation(event.sender_id) as conv:
+            await conv.send_message(i18n.get('ENTER_TOKEN_CREDIT', user['lang']))
+            response = await conv.get_response()
+            try:
+                token_credit = int(response.text)
+            except ValueError:
+                await conv.send_message(i18n.get('MUST_BE_INTEGER', user['lang']))
+                return
 
-        token_value = helper.generate_random_token()
+            token_value = helper.generate_random_token()
 
-        token_data = {
-            "creator_id": event.sender_id,
-            "token": token_value,
-            "credit": token_credit,
-            'date_created': datetime.datetime.now()
-        }
+            token_data = {
+                "creator_id": user['user_id'],
+                "token": token_value,
+                "credit": token_credit,
+                'date_created': datetime.datetime.now()
+            }
 
-        try:
-            result = tokens.insert_one(token_data)
-            await conv.send_message(f"Token registered successfully!\nGenerated token: {token_value}")
-        except Exception as e:
-            await conv.send_message(f"Error: {e}")
+            try:
+                tokens.insert_one(token_data)
+                await conv.send_message(f'{i18n.get('TOKEN_GENERATED_SUCCESSFULLY', user['lang'])}\n\n```{token_value}```')
+            except Exception as e:
+                await conv.send_message(i18n.get('ERROR', user['lang']))
+    else:
+        await event.respond(i18n.get('NOT_AUTHORIZED'), user['lang'])
 
 
-@bot.on(events.CallbackQuery(pattern="VIEW_TOKENS"))
+@bot.on(events.CallbackQuery(pattern="VIEW_TOKENS:*"))
 async def view_tokens(event):
-    if event.sender_id not in config.BOT_ADMINS:
-        await event.respond("You are not authorized to view tokens.")
-        return
+    user = helper.bot_auth(event, users)
 
-    # Initialize page_number and store it in a dict to be used later
-    find_tokens = tokens.find({}).limit(10)
-    if not find_tokens:
-        await event.respond("No more tokens to display.")
-        return
-    
-    keys = []
-    for token in find_tokens:
-        keys.append([Button.inline(str(token["token"]), str.encode("find_token:" + str(token["token"])))])
-    count = tokens.count_documents({})
-    total_pages = count // 10
-    if count % 10 != 0:
-        total_pages += 1
-    page_keys = navlib.paginate("tokens_list", 1, total_pages=total_pages)
-    if len(page_keys) != 0:
-        keys.append(page_keys)
-    await event.reply("select token:", buttons=keys)
+    if user['user_id'] in config.BOT_ADMINS:
+        count_tokens = tokens.count_documents({})
 
-
-@bot.on(events.CallbackQuery(pattern="tokens_list:*"))
-async def tokens_list(event):
-    if event.sender_id not in config.BOT_ADMINS:
-        await event.respond("You are not authorized to view tokens.")
-        return
-    count_tokens = tokens.count_documents({})
-    if count_tokens == 0:
-        await event.reply("Tokens not found!")
-        return
-    current_page = int(event.data.decode().split(":")[1])
-    skip = (current_page * 10) - 10
-    # Initialize page_number and store it in a dict to be used later
-    tokens = tokens.find({}).limit(10).skip(skip)
-    if not tokens:
-        await event.respond("No more tokens to display.")
-        return
-    
-    keys = [
-
-    ]
-    for token in tokens:
-        keys.append([Button.inline(str(token["token"]), str.encode("find_token:" + str(token["token"])))])
-    count = tokens.count_documents({})
-    total_pages = count // 10
-    if count % 10 != 0:
-        total_pages += 1
-    page_keys = navlib.paginate("tokens_list", current_page, total_pages=total_pages)
-    if len(page_keys) != 0:
-        keys.append(page_keys)
-    await event.reply("select token:", buttons=keys)
+        if count_tokens == 0:
+            await event.reply(i18n.get('NO_TOKEN', user['lang']))
+            return
+        
+        current_page = int(event.data.decode().split(":")[1])
+        skip = (current_page * 10) - 10
+        tokens_find = tokens.find({}).limit(10).skip(skip)
+        
+        if not tokens_find:
+            await event.reply(i18n.get('NO_TOKEN_LEFT', user['lang']))
+            return
+        
+        keys = []
+        for token in tokens_find:
+            keys.append([Button.inline(str(token["token"]), str.encode("VIEW_TOKEN:" + str(token["token"])))])
+        count = tokens.count_documents({})
+        total_pages = count // 10
+        if count % 10 != 0:
+            total_pages += 1
+        page_keys = navlib.paginate("tokens_list", current_page, total_pages=total_pages)
+        if len(page_keys) != 0:
+            keys.append(page_keys)
+        await event.reply(i18n.get('SELECT_TOKEN', user['lang']), buttons=keys)
+    else:
+        await event.respond(i18n.get('NOT_AUTHORIZED'), user['lang'])
 
 
-@bot.on(events.CallbackQuery(pattern="find_token:*"))
-async def find_token(event):
-    if event.sender_id in config.BOT_ADMINS:
+@bot.on(events.CallbackQuery(pattern="VIEW_TOKEN:*"))
+async def view_token(event):
+    user = helper.bot_auth(event, users)
+    if user['user_id'] in config.BOT_ADMINS:
         token = event.data.decode().split(":")[1]
         token = tokens.find_one({"token": token})
-        if token is None:
-            await event.reply("Token not found!")
-        else:
-            message = (f"Creator ID: {token['creator_id']}\n"
-            f"Token: {token['token']}\n"
-            f"Credit: {token['credit']}\n\n")
+        if token:
+            message = (f"{i18n.get('CREATOR', user['lang'])}: `{token['creator_id']}`\n"
+            f"{i18n.get('CREDIT', user['lang'])}: `{token['credit']}`\n"
+            f"{i18n.get('TOKEN', user['lang'])}: `{token['token']}`")
             await event.reply(message)
+        else:
+            await event.response(i18n.get('TOKEN_NOT_FOUND', user['lang']))
 
 
 bot.run_until_disconnected()

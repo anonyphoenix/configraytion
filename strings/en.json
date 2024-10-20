@@ -2,6 +2,7 @@
     "LANGUAGE": "English",
     "FIRST_TIME": "Hi! Please choose your language.",
     "WELCOME": "Welcome! You can either select a config from our channel to receive it here or use the 'get config' button below.",
+    "ERROR": "There was an error.",
     "VERIFY_SUBSCRIPTION": "Verify Subscription",
     "JOIN_FIRST_AND_THEN_RETRY": "To use this bot, you must be subscribed to the following channel(s). First subscribe, then start the bot again.",
     "CONFIG_NOT_FOUND": "Config is not found.",
@@ -13,5 +14,16 @@
     "FROM": "from",
     "ADD_TOKEN": "Add token",
     "VIEW_TOKENS": "View tokens",
-    "GET_CONFIG": "Get config"
+    "GET_CONFIG": "Get config",
+    "NOT_AUTHORIZED": "You are not authorized to perform this action.",
+    "ENTER_TOKEN_CREDIT": "Please enter token's credit:",
+    "MUST_BE_INTEGER": "You must enter an integer.",
+    "TOKEN_GENERATED_SUCCESSFULLY": "Token generated successfully. Token:",
+    "TOKEN_NOT_FOUND": "Token is not found",
+    "CREATOR": "Creator",
+    "TOKEN": "Token",
+    "CREDIT": "Credit",
+    "NO_TOKEN": "There are no tokens. Please add a token first.",
+    "NO_TOKEN_LEFT": "There no tokens left to show.",
+    "SELECT_TOKEN": "Select a token:"
 }
