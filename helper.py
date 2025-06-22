@@ -24,16 +24,16 @@ async def bot_lang(event):
 async def bot_welcome(event, lang):
     if event.sender_id in config.BOT_ADMINS:
         await event.respond(
-            i18n.get('WELCOME', lang=lang),
+            i18n.get('WELCOME', lang),
             buttons=[
-                [Button.inline(i18n.get('ADD_TOKEN', lang=lang), b'ADD_TOKEN')],
-                [Button.inline(i18n.get('VIEW_TOKENS', lang=lang), b'VIEW_TOKENS:1')],
-                [Button.inline(i18n.get('GET_CONFIG', lang=lang), b'GET_CONFIG')]
+                [Button.inline(i18n.get('ADD_TOKEN', lang), b'ADD_TOKEN')],
+                [Button.inline(i18n.get('VIEW_TOKENS', lang), b'VIEW_TOKENS:1')],
+                [Button.inline(i18n.get('GET_CONFIG', lang), b'GET_CONFIG')]
             ]
         )
     else:
-        await event.respond(i18n.get('WELCOME', lang=lang),
-                            buttons=[[Button.inline(i18n.get('GET_CONFIG', lang=lang), b'GET_CONFIG')]])
+        await event.respond(i18n.get('WELCOME', lang),
+                            buttons=[[Button.inline(i18n.get('GET_CONFIG', lang), b'GET_CONFIG')]])
 
 
 def bot_auth(event, users_db):

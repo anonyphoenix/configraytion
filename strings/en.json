@@ -25,5 +25,7 @@
     "CREDIT": "Credit",
     "NO_TOKEN": "There are no tokens. Please add a token first.",
     "NO_TOKEN_LEFT": "There no tokens left to show.",
-    "SELECT_TOKEN": "Select a token:"
+    "SELECT_TOKEN": "Select a token:",
+    "WAIT_BETWEEN_REQUESTS_1": "Please wait ",
+    "WAIT_BETWEEN_REQUESTS_2": " minute(s) to request a new set of configs."
 }

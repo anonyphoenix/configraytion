@@ -66,12 +66,13 @@ async def start(event):
                 await helper.bot_welcome(event, user['lang'])
 
 
-@bot.on(events.CallbackQuery(pattern='LANG_EN'))
-async def lang_en(event):
+@bot.on(events.CallbackQuery(pattern='LANG_(EN|FA)'))
+async def lang_en_fa(event):
+    lang_code = 'en' if 'LANG_EN' in event.data.decode() else 'fa'
     users.update_one({
         'user_id': event.sender_id
     }, { '$set': {
-        'lang': 'en'
+        'lang': lang_code,
     }, '$setOnInsert': {
         'user_id': event.sender_id,
         'user_type': helper.get_peer_type_from_event(event),
@@ -80,30 +81,22 @@ async def lang_en(event):
         'last_config_request_time': datetime.datetime.min
     }}, upsert=True)
     await helper.bot_welcome(event, 'en')
-
-
-@bot.on(events.CallbackQuery(pattern='LANG_FA'))
-async def lang_fa(event):
-    users.update_one({
-        'user_id': event.sender_id
-    }, { '$set': {
-        'lang': 'fa'
-    }, '$setOnInsert': {
-        'user_id': event.sender_id,
-        'user_type': helper.get_peer_type_from_event(event),
-        'user_group': 'registered',
-        'registration_time': datetime.datetime.now(),
-        'last_config_request_time': datetime.datetime.min
-    }}, upsert=True)
-    await helper.bot_welcome(event, 'fa')
+    raise events.StopPropagation
 
 
 @bot.on(events.CallbackQuery(pattern='GET_CONFIG'))
 async def get_config(event):
-    find_configs = configs.find().sort('config_id', DESCENDING).limit(3)
-    for c in find_configs:
-        await event.respond('```' + c['url'] + '#' + c['country_emoji'] + ' t.me/' + config.CHANNEL_USERNAME + ' ' + c['country'] + '```',
-                            file=c['qrcode'])
+    user = helper.bot_auth(event, users)
+    if user['last_config_request_time'] < datetime.datetime.now() - datetime.timedelta(minutes=15):
+        find_configs = configs.find().sort('config_id', DESCENDING).limit(3)
+        for c in find_configs:
+            await event.respond('```' + c['url'] + '#' + c['country_emoji'] + ' t.me/' + config.CHANNEL_USERNAME + ' ' + c['country'] + '```',
+                                file=c['qrcode'])
+    else:
+        wait_time_minute = (datetime.datetime.now() - user['last_config_request_time']).minute + 1
+        await event.respond(i18n.get('WAIT_BETWEEN_REQUESTS_1', user['lang']) + str(wait_time_minute) +
+                            i18n.get('WAIT_BETWEEN_REQUESTS_2', user['lang']))
+    raise events.StopPropagation
 
 
 @bot.on(events.CallbackQuery(pattern='ADD_TOKEN'))
@@ -137,9 +130,10 @@ async def add_token(event):
                 await conv.send_message(i18n.get('ERROR', user['lang']))
     else:
         await event.respond(i18n.get('NOT_AUTHORIZED'), user['lang'])
+    raise events.StopPropagation
 
 
-@bot.on(events.CallbackQuery(pattern='VIEW_TOKENS:*'))
+@bot.on(events.CallbackQuery(pattern='VIEW_TOKENS:.*'))
 async def view_tokens(event):
     user = helper.bot_auth(event, users)
 
@@ -168,12 +162,13 @@ async def view_tokens(event):
         page_keys = navlib.paginate('VIEW_TOKENS', current_page, total_pages=total_pages)
         if len(page_keys) != 0:
             keys.append(page_keys)
-        await event.reply(i18n.get('SELECT_TOKEN', user['lang']), buttons=keys)
+        await event.respond(i18n.get('SELECT_TOKEN', user['lang']), buttons=keys)
     else:
         await event.respond(i18n.get('NOT_AUTHORIZED'), user['lang'])
+    raise events.StopPropagation
 
 
-@bot.on(events.CallbackQuery(pattern='VIEW_TOKEN:*'))
+@bot.on(events.CallbackQuery(pattern='VIEW_TOKEN:.*'))
 async def view_token(event):
     user = helper.bot_auth(event, users)
     if user['user_id'] in config.BOT_ADMINS:
@@ -186,6 +181,6 @@ async def view_token(event):
             await event.reply(message)
         else:
             await event.respond(i18n.get('TOKEN_NOT_FOUND', user['lang']))
-
+    raise events.StopPropagation
 
 bot.run_until_disconnected()
