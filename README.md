@@ -4,8 +4,6 @@
 
 Configraytion collects v2ray/xray/trojan/shadowsocks configs and facilitate access to them for everyone.
 
-Official Telegram bot: [@configraytion_bot](https://t.me/configraytion_bot)
-
 ## Features
 
 + QR code generation
