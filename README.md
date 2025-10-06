@@ -10,7 +10,7 @@ Configraytion collects v2ray/xray/trojan/shadowsocks configs and facilitate acce
 + Validity and ping check
 + Multilanguage design
 + Access management
-+ Shell scripts
++ Shell scripts for admin and db management
 
 ## Requirements
 
