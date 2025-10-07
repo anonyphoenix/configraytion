@@ -17,6 +17,7 @@ Configraytion collects v2ray/xray/trojan/shadowsocks configs and facilitate acce
 + Mongo DB
 + Python 3
 + Telegram account
++ Telegram API ID and API hash
 
 ## Installation
 
